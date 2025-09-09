@@ -2,26 +2,17 @@ from langchain.output_parsers import PydanticOutputParser
 from dotenv import load_dotenv
 from langgraph.types import interrupt
 import openai
-<<<<<<< HEAD
-import os
-
-from state import PANDetailsState, OverallState, InputState, PANVerificationStateAck
-from prompts import GREETING_PROMPT, DISPLAY_PROMPT
-=======
 import time
 import re
 import os
 
 from state import PANDetailsState_pydantic, OverallState, InputState, VerificationState
 from prompts import PAN_GREETING_PROMPT, DISPLAY_PROMPT, PAN_QUESTIONS_PROMPT, PAN_VALIDATION_PROMPT, PAN_VERIFICATION_SUCCESS_PROMPT, PAN_VERIFICATION_FAILED_PROMPT, FORM_60_PROMPT, DISPLAY_FORM_60_PROMPT
->>>>>>> 920f314 (AADHAR + PAN workflow)
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 import pandas as pd
 
 load_dotenv()
 
-<<<<<<< HEAD
-=======
 def is_integer(s):
     try:
         int(s)
@@ -29,33 +20,23 @@ def is_integer(s):
     except ValueError:
         return False
     
->>>>>>> 920f314 (AADHAR + PAN workflow)
 class PanVerificationLLM:
     def __init__(self):
         self.llm = openai.OpenAI(
             api_key=os.getenv("GEMINI_API_KEY"),
             base_url=os.getenv("GEMINI_BASE_URL")
         )
-<<<<<<< HEAD
-        self.df = pd.read_csv(r"/Users/administrator/Desktop/chat/databse.csv")
-=======
         self.df = pd.read_csv(r"E:\KYC\KYC\databse.csv")
         self.retry = 0
         self.pan_pattern = r'[A-Z]{5}[0-9]{4}[A-Z]{1}'
         self.dob_pattern = r'[0-9]{2}/[0-9]{2}/[0-9]{4}'
->>>>>>> 920f314 (AADHAR + PAN workflow)
 
     def greet(self, state:OverallState):
         
         print("Greeting the user...")
         messages = [
-<<<<<<< HEAD
-            {"role": "system", "content": GREETING_PROMPT},
-            {"role": "user", "content": "Please greet me and ask whether you have a PAN card or not."}
-=======
             {"role": "system", "content": PAN_GREETING_PROMPT},
             {"role": "user", "content": "Do not greet me but continue to ask whether I have a PAN card(IMPORTANT)."}
->>>>>>> 920f314 (AADHAR + PAN workflow)
         ]
 
         retries = 0
@@ -70,11 +51,7 @@ class PanVerificationLLM:
 
                 if response.choices[0].message.content:
                     state['ai_response'] = response.choices[0].message.content
-<<<<<<< HEAD
-                    print(state['ai_response'])
-=======
                     print("\n",state['ai_response'])
->>>>>>> 920f314 (AADHAR + PAN workflow)
                     return state
 
                 elif not response.choices or response.choices[0].message.content is None:
@@ -86,9 +63,6 @@ class PanVerificationLLM:
                 return state
             
             retries += 1
-<<<<<<< HEAD
-            
-=======
 
     def _human_in_the_loop(self, state:OverallState):        
         self.retry += 1
@@ -140,26 +114,16 @@ class PanVerificationLLM:
         
         return False, answer
     
->>>>>>> 920f314 (AADHAR + PAN workflow)
     def accept_pan_input(self, state:OverallState):
         questions = [
             "Enter your PAN card number",
             "Enter your date of birth (DD/MM/YYYY)",
-<<<<<<< HEAD
-            "Enter your father's name",
-=======
->>>>>>> 920f314 (AADHAR + PAN workflow)
             "Enter your PAN card holders name"
         ]
         answers = []
         qa_map={}
 
         # HUMAN in the LOOP
-<<<<<<< HEAD
-        for question in questions:
-            # interrupt the user for the answer
-            answer = interrupt(f"{question}")
-=======
         for i,question in enumerate(questions):
             # interrupt the user for the answer
             retry = 0
@@ -195,7 +159,6 @@ class PanVerificationLLM:
                 answer: str = interrupt(f"{response.choices[0].message.content}")
                 retry += 1
 
->>>>>>> 920f314 (AADHAR + PAN workflow)
             answers.append(answer)
             qa_map[question] = answer
         
@@ -211,37 +174,16 @@ class PanVerificationLLM:
         response = self.llm.beta.chat.completions.parse(
             model="gemini-2.5-flash",
             messages=messages,
-<<<<<<< HEAD
-            response_format =PANDetailsState
-=======
             response_format =PANDetailsState_pydantic
->>>>>>> 920f314 (AADHAR + PAN workflow)
         )
 
         result = response.choices[0].message.parsed
 
-<<<<<<< HEAD
-        fields = list(PANDetailsState.model_fields.keys())
-=======
         fields = list(PANDetailsState_pydantic.model_fields.keys())
->>>>>>> 920f314 (AADHAR + PAN workflow)
 
         for field in fields:
             field_value = getattr(result, field)
             if field_value is not None:
-<<<<<<< HEAD
-                state['pan_details'][field] = field_value
-
-        while True:
-            current_details_str = f"""
-                Here are the details I have:
-                - PAN Number: {state['pan_details'].get('pan_card_number')}
-                - Date of Birth: {state['pan_details'].get('date_of_birth')}
-                - Father's Name: {state['pan_details'].get('father_name')}
-                - Holder's Name: {state['pan_details'].get('pan_card_holders_name')}
-
-                Are these details correct? (yes/no)
-=======
                 state["pan_details"][field] = field_value
 
         while True:
@@ -252,27 +194,16 @@ Here are the final PAN card details I have:
 - Holder's Name: {state['pan_details'].get('pan_card_holders_name')}
 
 Are these details correct? (yes/no)
->>>>>>> 920f314 (AADHAR + PAN workflow)
                 """
 
             human_input = interrupt(current_details_str)
             
             if human_input.lower() == "no":
-<<<<<<< HEAD
-                print("Please enter the correct details in the format: \nfield_name: value \nExample: pan_card_holders_name: New Name")
-                
-                human_details_correction = interrupt("Enter your corrected details:")
-=======
                 human_details_correction = interrupt("Please enter the correct details in the format: \nfield_name: value \nExample: pan_card_holders_name: New Name\nEnter your corrected details:")
->>>>>>> 920f314 (AADHAR + PAN workflow)
 
                 current_details = {
                     "pan_card_number": state['pan_details'].get("pan_card_number"),
                     "date_of_birth": state['pan_details'].get("date_of_birth"),
-<<<<<<< HEAD
-                    "father_name": state['pan_details'].get("father_name"),
-=======
->>>>>>> 920f314 (AADHAR + PAN workflow)
                     "pan_card_holders_name": state['pan_details'].get("pan_card_holders_name")
                 }
 
@@ -294,33 +225,16 @@ Are these details correct? (yes/no)
                 response = self.llm.beta.chat.completions.parse(
                     model="gemini-2.5-flash", 
                     messages=messages,
-<<<<<<< HEAD
-                    response_format=PANDetailsState 
-=======
                     response_format=PANDetailsState_pydantic 
->>>>>>> 920f314 (AADHAR + PAN workflow)
                 )
 
                 result = response.choices[0].message.parsed
 
-<<<<<<< HEAD
-                print("\n\nAfter no acknowledgement (with context):\n")
-                print(result,"\n############\n")
-
-                fields = list(PANDetailsState.model_fields.keys())
-=======
                 fields = list(PANDetailsState_pydantic.model_fields.keys())
->>>>>>> 920f314 (AADHAR + PAN workflow)
                 map_pan = {}
 
                 for field in fields:
                     field_value = getattr(result, field)
-<<<<<<< HEAD
-                    if field_value is not None:
-                        state['pan_details'][field] = field_value
-                        print(f"Updated {field}: {field_value}")
-                        map_pan[field] = field_value
-=======
 
                     if field_value is not None:
                         retry = 0
@@ -347,7 +261,6 @@ Are these details correct? (yes/no)
                             
                             retry += 1
                             
->>>>>>> 920f314 (AADHAR + PAN workflow)
                     else:
                         map_pan[field] = state['pan_details'].get(field)
 
@@ -357,42 +270,14 @@ Are these details correct? (yes/no)
         
 
     def verify_from_NSDL(self, state: OverallState):
-<<<<<<< HEAD
-        print("Verifying from NSDL database...")
-        
-        # Get the PAN details from state
-        pan_number = state['pan_details'].get("pan_card_number", "").strip().upper()
-        dob = state['pan_details'].get("date_of_birth", "").strip()
-        father_name = state['pan_details'].get("father_name", "").strip()
-=======
         print("Verifying from NSDL database...")    
 
         pan_number = state['pan_details'].get("pan_card_number", "").strip().upper()
         dob = state['pan_details'].get("date_of_birth", "").strip()
->>>>>>> 920f314 (AADHAR + PAN workflow)
         full_name = state['pan_details'].get("pan_card_holders_name", "").strip()
         
         print(f"Verifying PAN: {pan_number}")
         print(f"DOB: {dob}")
-<<<<<<< HEAD
-        print(f"Father: {father_name}")
-        print(f"Name: {full_name}")
-        
-        # Check if all required fields are present
-        if not all([pan_number, dob, father_name, full_name]):
-            print("Error: Missing required PAN details for verification")
-            state['verification_status'] = 'error'
-            state['verification_message'] = 'Missing required information for verification'
-            return state
-        
-        # Search for matching record in database
-        try:
-            # Create a mask for exact matches using the correct column names
-            mask = (
-                (self.df['pan_card_number'].str.strip().str.upper() == pan_number) &
-                (self.df['date_of_birth'].str.strip() == dob) &
-                (self.df['father_name'].str.strip().str.upper() == father_name.upper()) &
-=======
         print(f"Name: {full_name}")
         
         if not all([pan_number, dob, full_name]):
@@ -405,17 +290,12 @@ Are these details correct? (yes/no)
             mask = (
                 (self.df['pan_card_number'].str.strip().str.upper() == pan_number) &
                 (self.df['date_of_birth'].str.strip() == dob) &
->>>>>>> 920f314 (AADHAR + PAN workflow)
                 (self.df['pan_card_holders_name'].str.strip().str.upper() == full_name.upper())
             )
             
             matching_records = self.df[mask]
             
             if not matching_records.empty:
-<<<<<<< HEAD
-                print("✅ PAN verification successful!")
-                print("Data found in NSDL database")
-=======
                 messages = [
                     {"role": "system", "content": PAN_VERIFICATION_SUCCESS_PROMPT},
                     {"role": "user", "content": "PAN validation is successful"}
@@ -429,15 +309,10 @@ Are these details correct? (yes/no)
 
                 print(response.choices[0].message.content)
 
->>>>>>> 920f314 (AADHAR + PAN workflow)
                 state['pan_verification_status']['verification_status'] = 'success'
                 state['pan_verification_status']['verification_message'] = 'PAN card details verified successfully'
                 state['pan_verification_status']['verification_timestamp'] = pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')
             else:
-<<<<<<< HEAD
-                print("❌ PAN verification failed!")
-                print("No matching data found in NSDL database")
-=======
                 messages = [
                     {"role": "system", "content": PAN_VERIFICATION_FAILED_PROMPT},
                     {"role": "user", "content": "PAN validation is unsuccessful"}
@@ -450,7 +325,6 @@ Are these details correct? (yes/no)
                 )
 
                 print(response.choices[0].message.content)
->>>>>>> 920f314 (AADHAR + PAN workflow)
                 state['pan_verification_status']['verification_status'] = 'failed'
                 state['pan_verification_status']['verification_message'] = 'PAN card details not found in database'
                 state['pan_verification_status']['verification_timestamp'] = pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -460,8 +334,6 @@ Are these details correct? (yes/no)
             state['pan_verification_status']['verification_status'] = 'error'
             state['pan_verification_status']['verification_message'] = f'Verification error: {str(e)}'
         
-<<<<<<< HEAD
-=======
         return state
     
     def _accept_form60(self, state:OverallState):
@@ -505,5 +377,4 @@ Are these details correct? (yes/no)
 
             print("CONGARTULATIONS!! Your KYC PROCESS has been SUCCESFULLY COMPLETED")
 
->>>>>>> 920f314 (AADHAR + PAN workflow)
         return state
